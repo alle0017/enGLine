@@ -23,7 +23,7 @@ export abstract class BindableBuffer {
             this.bufferChangeRate = toGlBinding(pass.ctx, bufferChangeRate);
       }
 
-      public write(array: AllowSharedBufferSource, type: GLType) {
+      public write(array: AllowSharedBufferSource, type: GLType = this.type) {
             const gl = this.pass.ctx;
             const glBindingType = this.bufferChangeRate; // static, dynamic, stream
 
@@ -63,5 +63,9 @@ export abstract class BindableBuffer {
       public abstract bind(program: Program): void;
       public getType(): GLType {
             return this.type;
+      }
+      public setType(type: GLType): this {
+            this.type = type;
+            return this;
       }
 }

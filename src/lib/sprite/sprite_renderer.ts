@@ -8,16 +8,36 @@ import { Binding, GLType, Primitives } from '../../rendering/enum.js';
 import { Texture } from '../../rendering/texture.js';
 import { Renderer } from '../rendering/renderer.js';
 import { System, Updatable } from '../../ecs/system.js';
+import { VertexGroup } from '../../rendering/vertex_group.js';
 
+const DESCRIPTOR = {
+      'a_translation': {
+            size: 3,
+            binding: Binding.DYNAMIC,
+            type: GLType.FLOAT
+      },
+      'a_rotations': {
+            size: 3,
+            binding: Binding.DYNAMIC,
+            type: GLType.FLOAT
+      },
+      'a_texCoord': {
+            size: 2,
+            binding: Binding.DYNAMIC,
+            type: GLType.FLOAT
+      },
+      'a_position': {
+            size: 2,
+            binding: Binding.DYNAMIC,
+            type: GLType.FLOAT
+      },
+};
 export class SpriteRenderer extends System<Sprite> implements Updatable {
       readonly name: string = 'sprite';
 
       private readonly positions: PositionSystem;
       public readonly program: Program;
-      private readonly translation: VertexBuffer;
-      private readonly rotations: VertexBuffer;
-      private readonly indices: VertexBuffer;
-      private readonly textureCoords: VertexBuffer;
+      private readonly vertices: VertexGroup<'a_translation' | 'a_rotations' | 'a_texCoord' | 'a_position'>;
       private readonly texture: Texture;
       private readonly renderer: Renderer;
       private dirty: boolean = true;
@@ -28,12 +48,7 @@ export class SpriteRenderer extends System<Sprite> implements Updatable {
             this.renderer = renderer;
             this.program = new Program(renderer.pass, VERTEX, FRAGMENT);
             this.positions = this.inject(PositionSystem);
-
-            this.translation = new VertexBuffer(renderer.pass, 'a_translation', Binding.DYNAMIC).setSize(3);
-            this.rotations = new VertexBuffer(renderer.pass, 'a_rotations', Binding.DYNAMIC).setSize(3);
-            this.textureCoords = new VertexBuffer(renderer.pass, 'a_texCoord', Binding.DYNAMIC).setSize(2);
-            this.indices = new VertexBuffer(renderer.pass, 'a_position', Binding.DYNAMIC).setSize(2);
-
+            this.vertices = new VertexGroup(renderer.pass, DESCRIPTOR);
             this.texture = new Texture(renderer.pass, 'u_image', 0);
       }
       protected new(): Sprite {
@@ -54,6 +69,10 @@ export class SpriteRenderer extends System<Sprite> implements Updatable {
             this.renderer.projection.bind(this.program);
 
             let i = 0;
+            const coords: number[] = [];
+            const texCoords: number[] = [];
+            const indices: number[] = [];
+            const rotations: number[] = [];
 
             while (i < entities.length) {
                   const img = entities[i][1].img;
@@ -64,11 +83,12 @@ export class SpriteRenderer extends System<Sprite> implements Updatable {
                         }
                         continue;
                   }
+                  coords.splice(0, coords.length);
+                  texCoords.splice(0, texCoords.length);
+                  indices.splice(0,indices.length);
+                  rotations.splice(0, rotations.length);
 
-                  const coords: number[] = [];
-                  const texCoords: number[] = [];
-                  const indices: number[] = [];
-                  const rotations: number[] = [];
+                  
                   const texture = this.renderer.images.get(img);
 
                   while (i < entities.length && img == entities[i][1].img) {
@@ -102,16 +122,12 @@ export class SpriteRenderer extends System<Sprite> implements Updatable {
 
                   this.texture.use(texture);
                   this.texture.bind(this.program);
-
-                  this.indices.write(new Float32Array(indices), GLType.FLOAT);
-                  this.rotations.write(new Float32Array(rotations), GLType.FLOAT);
-                  this.translation.write(new Float32Array(coords), GLType.FLOAT);
-                  this.textureCoords.write(new Float32Array(texCoords), GLType.FLOAT);
-
-                  this.indices.bind(this.program);
-                  this.rotations.bind(this.program);
-                  this.translation.bind(this.program);
-                  this.textureCoords.bind(this.program);
+                  this.vertices.writeAndBind(this.program, {
+                        a_position: new Float32Array(indices),
+                        a_rotations: new Float32Array(rotations),
+                        a_texCoord: new Float32Array(texCoords),
+                        a_translation: new Float32Array(coords)
+                  })
 
                   this.renderer.pass.draw(Primitives.TRIANGLES, coords.length/3);
             }
