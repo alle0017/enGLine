@@ -1,6 +1,7 @@
 import { createEntity } from "./ecs/entity.js";
 import { World, WorldJson } from "./ecs/world.js";
-import { EngineUISystem, Pane } from "./engine/pane.js";
+import { EngineUISystem, } from "./engine/pane.js";
+import { Label } from "./engine/blade.js";
 import { PositionSystem } from "./lib/position/position_system.js";
 import { PerspectiveProjection } from "./lib/rendering/projection.js";
 import { Renderer } from "./lib/rendering/renderer.js";
@@ -57,38 +58,17 @@ ImageRegister.import(['image.png'])
       world.fromJson(JSON);
       
       const sm = world.getOrThrow(SelectorSystem).getElementById('smaller')!;
-      const pos = world.getOrThrow(PositionSystem).getOrThrow(sm)
+      const pos = world.getOrThrow(PositionSystem).getOrThrow(sm);
       world.register(EngineUISystem);
 
       const pane = world.getOrThrow(EngineUISystem).create(createEntity());
-      pane.bind({
-            name: 'x',
-            get() {
-                  return pos.x + '';
-            },
-            set(value) {
-                  pos.x = parseFloat(value);
-            }
-      })
-      pane.bind({
-            name: 'y',
-            get() {
-                  return pos.y + '';
-            },
-            set(value) {
-                  pos.y = parseFloat(value);
-            }
-      })
-      pane.bind({
-            name: 'z',
-            get() {
-                  return pos.z + '';
-            },
-            set(value) {
-                  pos.z = parseFloat(value);
-            }
-      })
-      pane.append(document.body)
+      pane.bind(new Label(world.getOrThrow(PositionSystem).name));
+      world.getOrThrow(PositionSystem).pane(pane, pos);
+      pane.bind(new Label(world.getOrThrow(SelectorSystem).name));
+      world.getOrThrow(SelectorSystem).pane(pane, world.getOrThrow(SelectorSystem).getOrThrow(sm));
+      pane.bind(new Label(world.getOrThrow(SpriteRenderer).name));
+      world.getOrThrow(SpriteRenderer).pane(pane, world.getOrThrow(SpriteRenderer).getOrThrow(sm));
+      pane.appendToHtml(document.body)
 
       function run() {
             world.run();

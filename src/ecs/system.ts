@@ -1,3 +1,5 @@
+import { type Pane, } from "../engine/pane.js";
+import { TextInput } from "../engine/blade.js";
 import type { Entity } from "./entity";
 import { ParallelMap } from "./parallel_map.js";
 import type { World } from './world';
@@ -67,6 +69,32 @@ export abstract class System<T extends {}> extends Service {
                   map.set(k, this.toJson(v));
             }
             return map;
+      }
+      public pane(pane: Pane, obj: T) {
+            for (const [k,v] of Object.entries(obj)) {
+                  const type = typeof v;
+                  if (type == 'string' || type == 'number' || type == 'boolean') {
+                        pane.bind(new TextInput({
+                              name: k,
+                              get(): string {
+                                    return `${obj[k as keyof T]}`;
+                              },
+                              set(value) {
+                                    switch (type) {
+                                          case "string": 
+                                                obj[k as keyof T] = value as T[keyof T];
+                                          break;
+                                          case "number":
+                                                obj[k as keyof T] = parseFloat(value) as T[keyof T];
+                                          break;
+                                          case "boolean":
+                                                obj[k as keyof T] = (value == 'true' ? true:  false) as T[keyof T];
+                                          break;
+                                    }
+                              },
+                        }))
+                  }
+            }
       }
 }
 export interface Updatable {
