@@ -1,5 +1,7 @@
-import { Service, System, Updatable } from '../ecs/system.js';
-import { Blade } from './blade.js';
+import { Entity, createEntity } from '../ecs/entity.js';
+import { System, Updatable } from '../ecs/system.js';
+import type { World } from '../ecs/world.js';
+import { Blade, Label } from './blade.js';
 
 export class Pane extends Blade {
       private readonly blades: Blade[] = []
@@ -50,3 +52,28 @@ export class EngineUISystem extends System<Pane> implements Updatable {
             }
       }
 }
+export function CreatePaneFromEntity(id: Entity, world: World) {
+      const pane = world.getOrThrow(EngineUISystem).create(createEntity());
+
+      for (const system of world.systemsStream()) {
+            const comp = system.get(id);
+            if (!comp) {
+                  continue;
+            }
+            pane.bind(new Label(system.name));
+            system.pane(pane, comp);
+      }
+      CreatePaneFromEntity.root.childNodes.forEach(child => child.remove());
+      pane.appendToHtml(CreatePaneFromEntity.root)
+      if (!CreatePaneFromEntity.root.isConnected) {
+            document.body.append(CreatePaneFromEntity.root)
+      }
+}
+
+CreatePaneFromEntity.root = (() => {
+      const root = document.createElement('div');
+      root.style.position = 'fixed';
+      root.style.left = 'calc(100vw - 240px)';
+      root.style.top = '10px';
+      return root;
+})()

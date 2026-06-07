@@ -1,6 +1,6 @@
-import { createEntity } from "./ecs/entity.js";
+import { createEntity, Entity } from "./ecs/entity.js";
 import { World, WorldJson } from "./ecs/world.js";
-import { EngineUISystem, } from "./engine/pane.js";
+import { CreatePaneFromEntity, EngineUISystem, } from "./engine/pane.js";
 import { Label } from "./engine/blade.js";
 import { PositionSystem } from "./lib/position/position_system.js";
 import { PerspectiveProjection } from "./lib/rendering/projection.js";
@@ -58,17 +58,9 @@ ImageRegister.import(['image.png'])
       world.fromJson(JSON);
       
       const sm = world.getOrThrow(SelectorSystem).getElementById('smaller')!;
-      const pos = world.getOrThrow(PositionSystem).getOrThrow(sm);
       world.register(EngineUISystem);
 
-      const pane = world.getOrThrow(EngineUISystem).create(createEntity());
-      pane.bind(new Label(world.getOrThrow(PositionSystem).name));
-      world.getOrThrow(PositionSystem).pane(pane, pos);
-      pane.bind(new Label(world.getOrThrow(SelectorSystem).name));
-      world.getOrThrow(SelectorSystem).pane(pane, world.getOrThrow(SelectorSystem).getOrThrow(sm));
-      pane.bind(new Label(world.getOrThrow(SpriteRenderer).name));
-      world.getOrThrow(SpriteRenderer).pane(pane, world.getOrThrow(SpriteRenderer).getOrThrow(sm));
-      pane.appendToHtml(document.body)
+      CreatePaneFromEntity(sm, world);
 
       function run() {
             world.run();

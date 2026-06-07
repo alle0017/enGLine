@@ -10,6 +10,9 @@ export class World {
       private readonly updatable: Set<Updatable> = new Set();
       private last: number = performance.now();
 
+      public systemsStream() {
+            return this.systems.values();
+      }
       public register(systemClass: InjectableClass) {
             const system = new systemClass(this);
 
