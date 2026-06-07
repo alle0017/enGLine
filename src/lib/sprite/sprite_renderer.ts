@@ -83,10 +83,10 @@ export class SpriteRenderer extends System<Sprite> implements Updatable {
                         }
                         continue;
                   }
-                  coords.splice(0, coords.length);
-                  texCoords.splice(0, texCoords.length);
-                  indices.splice(0,indices.length);
-                  rotations.splice(0, rotations.length);
+                  coords.length = 0;
+                  texCoords.length = 0;
+                  indices.length = 0;
+                  rotations.length = 0;
 
                   
                   const texture = this.renderer.images.get(img);
