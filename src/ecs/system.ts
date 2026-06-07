@@ -1,5 +1,5 @@
 import { type Pane, } from "../engine/pane.js";
-import { TextInput } from "../engine/blade.js";
+import { BooleanSelect, NumberInput, TextInput } from "../engine/blade.js";
 import type { Entity } from "./entity";
 import { ParallelMap } from "./parallel_map.js";
 import type { World } from './world';
@@ -73,26 +73,12 @@ export abstract class System<T extends {}> extends Service {
       public pane(pane: Pane, obj: T) {
             for (const [k,v] of Object.entries(obj)) {
                   const type = typeof v;
-                  if (type == 'string' || type == 'number' || type == 'boolean') {
-                        pane.bind(new TextInput({
-                              name: k,
-                              get(): string {
-                                    return `${obj[k as keyof T]}`;
-                              },
-                              set(value) {
-                                    switch (type) {
-                                          case "string": 
-                                                obj[k as keyof T] = value as T[keyof T];
-                                          break;
-                                          case "number":
-                                                obj[k as keyof T] = parseFloat(value) as T[keyof T];
-                                          break;
-                                          case "boolean":
-                                                obj[k as keyof T] = (value == 'true' ? true:  false) as T[keyof T];
-                                          break;
-                                    }
-                              },
-                        }))
+                  if (type == 'string') {
+                        pane.bind(new TextInput(k, obj));
+                  } else if (type == 'number') {
+                        pane.bind(new NumberInput(k, obj));
+                  } else if (type == 'boolean') {
+                        pane.bind(new BooleanSelect(k, obj));
                   }
             }
       }
