@@ -19,6 +19,9 @@ export class Program {
 
             gl.linkProgram(program);
 
+            gl.deleteShader(vs);
+            gl.deleteShader(fs);
+
             if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
                   throw new Error(`Error linking shader program: ${gl.getProgramInfoLog(program)}`);
             }
