@@ -63,22 +63,28 @@ function parseQuery(query: string) {
 export function getEntityWhere(world: World, query: string) {
       const { id, properties } = parseQuery(query);
 
-      if (id) {
+      if (typeof id == 'number') {
             return [id];
       }
-      const sets: Map<string, Set<Entity>> = new Map;
+      const sets: Set<Entity>[] = [];
 
       for (const {system, value, property} of properties) {
             const sys = world.getByNameOrThrow(system);
             const es = sys.entities();
-            const set: Set<Entity> = sets.get(system) || new Set;
+            const set: Set<Entity> = new Set;
 
             for (let i = 0; i < es.length; i++) {
+                  if (es[i] < 0) {
+                        continue;
+                  }
                   if ((sys.getOrThrow(es[i])[property]  + '') == value) {
                         set.add(es[i]);
                   }
             }
-            sets.set(system, set);
+            sets.push(set);
       }
-      return [...sets.values().reduce((p,c) => c.intersection(p))];
+      if (sets.length <= 0) {
+            return [];
+      }
+      return [...sets.reduce((p,c) => c.intersection(p))];
 }

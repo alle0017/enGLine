@@ -1,7 +1,8 @@
 import { Entity, createEntity } from '../ecs/entity.js';
 import { System, Updatable } from '../ecs/system.js';
 import type { World } from '../ecs/world.js';
-import { Blade, Label } from './blade.js';
+import { Blade, Label, TextInput } from './blade.js';
+import { getEntityWhere } from './query.js';
 
 export class Pane extends Blade {
       private readonly blades: Blade[] = []
@@ -54,6 +55,15 @@ export class EngineUISystem extends System<Pane> implements Updatable {
 }
 export function CreatePaneFromEntity(id: Entity, world: World) {
       const pane = world.getOrThrow(EngineUISystem).create(createEntity());
+
+      pane.bind(new TextInput('search', {
+            get search() {
+                  return ''
+            },
+            set search(value) {
+                  console.log(getEntityWhere(world, value));
+            }
+      }))
 
       for (const system of world.systemsStream()) {
             const comp = system.get(id);

@@ -8,6 +8,7 @@ import { Renderer } from "./lib/rendering/renderer.js";
 import { SelectorSystem } from "./lib/selector/selector_system.js";
 import { SpriteRenderer } from "./lib/sprite/sprite_renderer.js";
 import { ImageRegister } from "./rendering/image_register.js";
+import { Engine } from "./engine/engine.js";
 
 const JSON: WorldJson = {
       entities: [
@@ -48,6 +49,8 @@ const JSON: WorldJson = {
 
 const world = new World();
 
+
+
 ImageRegister.import(['image.png'])
 .then(reg => {
       world.register(PositionSystem)
@@ -58,9 +61,8 @@ ImageRegister.import(['image.png'])
       world.fromJson(JSON);
       
       const sm = world.getOrThrow(SelectorSystem).getElementById('smaller')!;
-      world.register(EngineUISystem);
 
-      CreatePaneFromEntity(sm, world);
+      new Engine(world);
 
       function run() {
             world.run();
