@@ -17,7 +17,7 @@
             // "Go to Definition" in VSCode
             "removeComments": false,
             "checkJs": true,
-            "target": "es2022",
+            "target": "es2025",
             "module": "es2022",
             "outDir": "./dist",
             "rootDir": "./src"
