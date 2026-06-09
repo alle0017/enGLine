@@ -1,5 +1,5 @@
 import { type Pane, } from "../engine/pane.js";
-import { BooleanSelect, NumberInput, TextInput } from "../engine/blade.js";
+import { Blade, BooleanSelect, Label, NumberInput, TextInput } from "../engine/blade.js";
 import type { Entity } from "./entity";
 import { ParallelMap } from "./parallel_map.js";
 import type { World } from './world';
@@ -19,15 +19,39 @@ export abstract class System<T extends {}> extends Service {
       protected readonly pool: ParallelMap<T> = new ParallelMap();
 
       protected abstract new(): T;
+       /**
+       * override this method to provide custom json import.
+       * see also {@link System.toJson} to provide custom 
+       * json representation
+       */   
       protected fromJson(json: {}): T {
             const obj = this.new();
             for (const [k,v] of Object.entries(json)) {
                   obj[k as keyof T] = v as T[keyof T];
             }
             return obj;
-      }     
+      }  
+      /**
+       * override this method to provide custom json representation.
+       * see also {@link System.fromJson} to provide custom 
+       * json initialization
+       */   
       public toJson(obj: T): {} {
             return obj as {};
+      }
+      /**
+       * override this method to provide custom pane behavior
+       */
+      protected createBlade(key: string, value: unknown, target: T): Blade {
+            const type = typeof value;
+            if (type == 'string') {
+                  return new TextInput(key, target);
+            } else if (type == 'number') {
+                  return new NumberInput(key, target);
+            } else if (type == 'boolean') {
+                  return new BooleanSelect(key, target);
+            }
+            return new Label(key);
       }
 
       public get(entity: Entity) {
@@ -70,16 +94,16 @@ export abstract class System<T extends {}> extends Service {
             }
             return map;
       }
+      /**
+       * method used to create custom pane to provide ui to test 
+       * properties in game engine.
+       * 
+       * > don't override this method. If you want to override 
+       * > pane behavior, prefer overriding {@link System.createBlade}
+       */
       public pane(pane: Pane, obj: T) {
             for (const [k,v] of Object.entries(obj)) {
-                  const type = typeof v;
-                  if (type == 'string') {
-                        pane.bind(new TextInput(k, obj));
-                  } else if (type == 'number') {
-                        pane.bind(new NumberInput(k, obj));
-                  } else if (type == 'boolean') {
-                        pane.bind(new BooleanSelect(k, obj));
-                  }
+                  this.createBlade(k, v, obj);
             }
       }
 }
